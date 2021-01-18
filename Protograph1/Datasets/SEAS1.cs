@@ -46,13 +46,12 @@ namespace Protograph.Datasets
             chartArea.AxisY.Title = YUnit;
             chartArea.AxisY.TitleFont = new Font("Arial", 30);
             chartArea.AxisX.LabelAutoFitMinFontSize = 20;
-            chartArea.AxisY.LabelAutoFitMinFontSize = 20;
+            chartArea.AxisY.LabelAutoFitMinFontSize = 10;
             chartArea.AxisX.LabelAutoFitMaxFontSize = 30;
             chartArea.AxisY.LabelAutoFitMaxFontSize = 30;
             chartArea.AxisX.MajorGrid.LineColor = Color.DarkGray;
             chartArea.AxisY.MajorGrid.LineColor = Color.DarkGray;
-            if (X.Length < 40) chartArea.AxisX.Interval = 1;
-            else chartArea.AxisX.IntervalAutoMode = IntervalAutoMode.VariableCount;
+            //chartArea.AxisX.Interval = 1;
             chart.ChartAreas.Add(chartArea);
 
             var series = new Series();
@@ -63,8 +62,7 @@ namespace Protograph.Datasets
             series.Font = new Font("Arial", 20);
             series.LabelFormat = "N2";
             series.LabelAngle = 90;
-            if (X.Length < 40) series.IsValueShownAsLabel = true;
-            else series.IsValueShownAsLabel = false;
+            series.IsValueShownAsLabel = true;
             series.IsXValueIndexed = false;
             Title title = new Title();
             title.Font = new Font("Arial", 40);
