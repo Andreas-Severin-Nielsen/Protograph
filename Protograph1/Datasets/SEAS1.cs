@@ -29,6 +29,7 @@ namespace Protograph.Datasets
         public string Note { get; set; }
 
         public string NewFileName { get; set; }
+        public double Total { get; set; }
 
 
         public Chart CreateChart()
@@ -39,22 +40,35 @@ namespace Protograph.Datasets
             var chartArea = new ChartArea();
             chartArea.AxisX.LabelStyle.Format = XFormat;
             chartArea.AxisY.LabelStyle.Format = YFormat;
-            chartArea.AxisX.LabelStyle.Font = new Font("Arial", 30);
+            chartArea.AxisX.LabelStyle.Font = new Font("Arial", 26);
             chartArea.AxisY.LabelStyle.Font = new Font("Arial", 30);
-            chartArea.AxisX.Title = XUnit;
-            chartArea.AxisX.TitleFont = new Font("Arial", 30);
+            chartArea.AxisX.LabelStyle.Angle = 90;
+            chartArea.AxisX.TitleFont = new Font("Arial", 30, FontStyle.Bold);
             chartArea.AxisY.Title = YUnit;
-            chartArea.AxisY.TitleFont = new Font("Arial", 30);
+            chartArea.AxisY.TitleFont = new Font("Arial", 30, FontStyle.Bold);
             chartArea.AxisX.LabelAutoFitMinFontSize = 20;
+            chartArea.AxisX.LabelAutoFitStyle = LabelAutoFitStyles.LabelsAngleStep90;
             chartArea.AxisY.LabelAutoFitMinFontSize = 10;
             chartArea.AxisX.LabelAutoFitMaxFontSize = 30;
             chartArea.AxisY.LabelAutoFitMaxFontSize = 30;
             chartArea.AxisX.MajorGrid.LineColor = Color.DarkGray;
             chartArea.AxisY.MajorGrid.LineColor = Color.DarkGray;
             TimeSpan ts = MaxX - MinX;
-            if (ts.TotalHours < 30) chartArea.AxisX.IntervalType = DateTimeIntervalType.Hours;
-            else if (ts.TotalDays < 40) chartArea.AxisX.IntervalType = DateTimeIntervalType.Days;
-            else if (ts.TotalDays < 370) chartArea.AxisX.IntervalType = DateTimeIntervalType.Months;
+            if (ts.TotalHours < 30)
+            {
+                chartArea.AxisX.IntervalType = DateTimeIntervalType.Hours;
+                chartArea.AxisX.Title = "Time";
+            }
+            else if (ts.TotalDays < 40)
+            {
+                chartArea.AxisX.IntervalType = DateTimeIntervalType.Days;
+                chartArea.AxisX.Title = "Dato";
+            }
+            else if (ts.TotalDays < 370)
+            {
+                chartArea.AxisX.IntervalType = DateTimeIntervalType.Months;
+                chartArea.AxisX.Title = "Måned";
+            }
             else chartArea.AxisX.IntervalType = DateTimeIntervalType.Years;
             chartArea.AxisX.Interval = 1;
             chart.ChartAreas.Add(chartArea);
@@ -64,21 +78,33 @@ namespace Protograph.Datasets
             series.ChartType = SeriesChartType.Column;
             series.XValueType = ChartValueType.DateTime;
             series.YValueType = ChartValueType.Double;
-            series.Font = new Font("Arial", 20);
+            series.Font = new Font("Arial", 25);
             series.LabelFormat = "N2";
             series.LabelAngle = 90;
             series.IsValueShownAsLabel = true;
-            series.IsXValueIndexed = false;
             Title title = new Title();
             title.Font = new Font("Arial", 40);
             title.Text = $"{MinX.ToLongDateString()}, {MinX.ToShortTimeString()} - " +
                 $"{MaxX.ToLongDateString()}, {MaxX.ToShortTimeString()}{Environment.NewLine}" +
-                $"{Note}";
+                $"{Note}{Environment.NewLine}" +
+                $"Total forbrug: {Total.ToString(YFormat)}";
             chart.Titles.Add(title);
             chart.Series.Add(series);
 
+
             // bind the datapoints
             chart.Series[Note].Points.DataBindXY(X, Y);
+
+            if (25 < ts.TotalDays && ts.TotalDays < 35)
+            {
+                for (int i = 0; i < X.Length; i++)
+                {
+                    if (X[i].DayOfWeek == DayOfWeek.Saturday || (X[i].DayOfWeek == DayOfWeek.Sunday))
+                    {
+                        chart.Series[Note].Points[i].Color = Color.DarkSlateGray;
+                    }
+                } 
+            }
 
             // draw!
             chart.Invalidate();
@@ -106,7 +132,8 @@ namespace Protograph.Datasets
                 Note = currentline[4];
             }
 
-
+            Total = 0.0;
+            foreach (double d in Y) Total += d;
 
             MinX = X[0];
             MaxX = X[Count - 1];
