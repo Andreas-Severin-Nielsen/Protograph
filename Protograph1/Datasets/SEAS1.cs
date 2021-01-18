@@ -51,7 +51,12 @@ namespace Protograph.Datasets
             chartArea.AxisY.LabelAutoFitMaxFontSize = 30;
             chartArea.AxisX.MajorGrid.LineColor = Color.DarkGray;
             chartArea.AxisY.MajorGrid.LineColor = Color.DarkGray;
-            //chartArea.AxisX.Interval = 1;
+            TimeSpan ts = MaxX - MinX;
+            if (ts.TotalHours < 30) chartArea.AxisX.IntervalType = DateTimeIntervalType.Hours;
+            else if (ts.TotalDays < 40) chartArea.AxisX.IntervalType = DateTimeIntervalType.Days;
+            else if (ts.TotalDays < 370) chartArea.AxisX.IntervalType = DateTimeIntervalType.Months;
+            else chartArea.AxisX.IntervalType = DateTimeIntervalType.Years;
+            chartArea.AxisX.Interval = 1;
             chart.ChartAreas.Add(chartArea);
 
             var series = new Series();
