@@ -14,17 +14,14 @@ namespace Protograph.ProtoGrapher
     class GraphCreator : IThreadPoolWorker
     {
         private string lognote; // process result log note
-        private string originalFilePath;  // original file location and path as string
-        private string ArchiveFileName; // Original file when archived
-        private string ChartFileName; // Chart file name
+        private string originalFile;  // original file location and path as string
         private IDataset dataset; // dataset containing data
         private Chart chart;
         
         public GraphCreator(string filepath)
         {
             lognote = filepath;
-            originalFilePath = filepath;
-
+            originalFile = filepath;
         }
 
         /// <summary>
@@ -34,6 +31,7 @@ namespace Protograph.ProtoGrapher
         public void ThreadPoolJob(object callback)
         {
             CreateGraph();
+            ((AutoResetEvent)callback).Set();
         }
 
         public void CreateGraph()
@@ -56,7 +54,7 @@ namespace Protograph.ProtoGrapher
             try
             {
                 // 0: Open file
-                string[] filetext = filehandler.OpenFile(originalFilePath);
+                string[] filetext = filehandler.OpenFile(originalFile);
 
                 // 1-2: Interprete data
                 DataInterpreter dataInterpreter = new DataInterpreter();
@@ -66,13 +64,17 @@ namespace Protograph.ProtoGrapher
                 chart = dataset.CreateChart();
 
                 // 5: Chart export
-                chart.SaveImage(dataset.Name + ".png", ChartImageFormat.Png);
-
-                lognote += " Processed OK.";
+                string newfile = Path.GetDirectoryName(originalFile);
+                newfile += dataset.NewFilepath;
+                filehandler.CreatePath(newfile);
+                newfile += dataset.NewFileName;
+                filehandler.saveChart(chart, newfile);
+                filehandler.Archive(originalFile, newfile);
+                lognote += " Processed OK: " + newfile;
             }
             catch(Exception e)
             {
-                lognote += e.Message;
+                lognote += " "+e.Message + " -*- "+e.StackTrace;
             }
             finally
             {
@@ -80,6 +82,7 @@ namespace Protograph.ProtoGrapher
                 DateTime dt = DateTime.Now;
                 string logname = $"{dt.Year}-{dt.Month}-{dt.Day}.log";
                 filehandler.Log(logname, lognote);
+                
             }
             
 

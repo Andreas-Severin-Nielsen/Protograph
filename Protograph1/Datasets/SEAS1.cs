@@ -22,12 +22,13 @@ namespace Protograph.Datasets
         private double MinY { get; set; }
         private string YUnit { get; set; }
         private CultureInfo UsedCulture { get; set; }
+        public string NewFilepath { get; set; }
 
         public DateTime[] X { get; set; }
         public double[] Y { get; set; }
         public string Note { get; set; }
 
-        public string Name { get; set; }
+        public string NewFileName { get; set; }
 
 
         public Chart CreateChart()
@@ -38,13 +39,20 @@ namespace Protograph.Datasets
             var chartArea = new ChartArea();
             chartArea.AxisX.LabelStyle.Format = XFormat;
             chartArea.AxisY.LabelStyle.Format = YFormat;
-            chartArea.AxisX.Name = XUnit;
-            chartArea.AxisY.Name = YUnit;
-            chartArea.AxisX.MajorGrid.LineColor = Color.LightGray;
-            chartArea.AxisY.MajorGrid.LineColor = Color.LightGray;
             chartArea.AxisX.LabelStyle.Font = new Font("Arial", 30);
             chartArea.AxisY.LabelStyle.Font = new Font("Arial", 30);
-            chartArea.AxisX.Interval = 1;
+            chartArea.AxisX.Title = XUnit;
+            chartArea.AxisX.TitleFont = new Font("Arial", 30);
+            chartArea.AxisY.Title = YUnit;
+            chartArea.AxisY.TitleFont = new Font("Arial", 30);
+            chartArea.AxisX.LabelAutoFitMinFontSize = 20;
+            chartArea.AxisY.LabelAutoFitMinFontSize = 20;
+            chartArea.AxisX.LabelAutoFitMaxFontSize = 30;
+            chartArea.AxisY.LabelAutoFitMaxFontSize = 30;
+            chartArea.AxisX.MajorGrid.LineColor = Color.DarkGray;
+            chartArea.AxisY.MajorGrid.LineColor = Color.DarkGray;
+            if (X.Length < 40) chartArea.AxisX.Interval = 1;
+            else chartArea.AxisX.IntervalAutoMode = IntervalAutoMode.VariableCount;
             chart.ChartAreas.Add(chartArea);
 
             var series = new Series();
@@ -55,8 +63,15 @@ namespace Protograph.Datasets
             series.Font = new Font("Arial", 20);
             series.LabelFormat = "N2";
             series.LabelAngle = 90;
-            series.IsValueShownAsLabel = true;
+            if (X.Length < 40) series.IsValueShownAsLabel = true;
+            else series.IsValueShownAsLabel = false;
             series.IsXValueIndexed = false;
+            Title title = new Title();
+            title.Font = new Font("Arial", 40);
+            title.Text = $"{MinX.ToLongDateString()}, {MinX.ToShortTimeString()} - " +
+                $"{MaxX.ToLongDateString()}, {MaxX.ToShortTimeString()}{Environment.NewLine}" +
+                $"{Note}";
+            chart.Titles.Add(title);
             chart.Series.Add(series);
 
             // bind the datapoints
@@ -81,32 +96,33 @@ namespace Protograph.Datasets
             for (int i = 1; i < filetext.Length; i++)
             {
                 currentline = filetext[i].Split('\t');
-                string datetime = currentline[0].Trim().Replace('.', '/') + " " + 
-                    currentline[1].Trim().Replace('.',':');
+                string datetime = currentline[0].Trim().Replace('.', '/') + " " +
+                    currentline[1].Trim().Replace('.', ':');
                 X[i - 1] = DateTime.Parse(datetime);
                 Y[i - 1] = float.Parse(currentline[2].Trim());
                 Note = currentline[4];
             }
 
-            
+
 
             MinX = X[0];
             MaxX = X[Count - 1];
 
             MinY = Y[0];
             MaxY = Y[0];
-            foreach(double f in Y)
+            foreach (double f in Y)
             {
                 if (f < MinY) MinY = f;
                 if (MaxY < f) MaxY = f;
             }
 
-            XFormat = NumberFormatter.DefineDateTimeFormat(X);
+            string newPathFormat;
+            (XFormat, newPathFormat) = NumberFormatter.DefineDateTimeFormat(X);
             YFormat = NumberFormatter.DefineFloatFormat(Y);
             XUnit = "Dato/tid";
             Note = metadata[4] + ": " + Note;
-            Name = $"{MinX.Year}_{MinX.Month}_{MinX.Day}_{MinX.Hour}_{MinX.Minute} - " +
-                $"{MaxX.Year}_{MaxX.Month}_{MaxX.Day}_{MaxX.Hour}_{MaxX.Minute}";
+            NewFileName = NumberFormatter.DefineFilename(MinX, MaxX);
+            NewFilepath = MinX.ToString(newPathFormat);
         }
     }
 }

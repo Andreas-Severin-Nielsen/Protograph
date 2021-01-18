@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -8,7 +9,7 @@ namespace Protograph.ProtoGrapher
 {
     class NumberFormatter
     {
-        internal static string DefineDateTimeFormat(DateTime[] x)
+        internal static (string, string) DefineDateTimeFormat(DateTime[] x)
         {
             bool minutesChange = false;
             bool hoursChange = false;
@@ -25,19 +26,32 @@ namespace Protograph.ProtoGrapher
                 if (x[i].Year != x[i - 1].Year) yearsChange = true;
             }
 
-            string format = "";
-            if (daysChange) format += "dd";
-            if (monthsChange) format += " MMMM";
-            if (yearsChange) format += " yyyy";
-            if (minutesChange || hoursChange) format += " HH:mm";
-            format.Trim();
+            string labelFormat = "";
+            if (daysChange) labelFormat += "dd";
+            if (monthsChange) labelFormat += " MMMM";
+            if (yearsChange) labelFormat += " yyyy";
+            if (minutesChange || hoursChange) labelFormat += " HH:mm";
+            labelFormat.Trim();
 
-            return format;
+            string dsc = @"\\";
+            string pathFormat = $@"{dsc}yyyy{dsc}";
+            if (hoursChange) pathFormat += $@"MM-MMMM{dsc}dd-dddd{dsc}";
+            else if (daysChange) pathFormat += $@"MM-MMMM{dsc}";
+
+            return (labelFormat, pathFormat);
         }
 
         internal static string DefineFloatFormat(double[] y)
         {
             return "N";
+        }
+
+        internal static string DefineFilename(DateTime minX, DateTime maxX)
+        {
+            string newFileName;
+            newFileName = $"{minX.ToString("yyyy-MM-dd-HH-mm")} -- " +
+                $"{maxX.ToString("yyyy-MM-dd-HH-mm")}";
+            return newFileName;
         }
     }
 }

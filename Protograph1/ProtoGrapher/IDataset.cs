@@ -9,7 +9,8 @@ namespace Protograph.ProtoGrapher
 {
     interface IDataset
     {
-        string Name { get; set; }
+        string NewFileName { get; set; }
+        string NewFilepath { get; set; }
 
         Chart CreateChart();
 
